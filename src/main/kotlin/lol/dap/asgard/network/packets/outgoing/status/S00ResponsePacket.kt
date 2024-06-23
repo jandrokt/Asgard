@@ -6,7 +6,7 @@ import lol.dap.asgard.network.packets.OutgoingPacket
 import lol.dap.asgard.network.packets.annotations.Packet
 
 @Packet(id = 0x00)
-data class S00StatusResponsePacket(
+data class S00ResponsePacket(
     val jsonResponse: String
 ) : OutgoingPacket {
 

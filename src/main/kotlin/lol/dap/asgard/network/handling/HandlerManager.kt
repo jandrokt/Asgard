@@ -1,7 +1,7 @@
-package network.handlers
+package lol.dap.asgard.network.handling
 
-import network.handling.Handler
-import network.server.Client
+import lol.dap.asgard.event_dispatching.EventDispatcher
+import lol.dap.asgard.network.server.Client
 import java.nio.ByteBuffer
 
 interface HandlerManager {

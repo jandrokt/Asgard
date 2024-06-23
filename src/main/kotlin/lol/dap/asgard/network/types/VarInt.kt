@@ -1,4 +1,4 @@
-package network.types
+package lol.dap.asgard.network.types
 
 @JvmInline
 value class VarInt(

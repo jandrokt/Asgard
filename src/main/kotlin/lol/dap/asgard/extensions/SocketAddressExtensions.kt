@@ -1,4 +1,4 @@
-package extensions
+package lol.dap.asgard.extensions
 
 import io.ktor.network.sockets.*
 

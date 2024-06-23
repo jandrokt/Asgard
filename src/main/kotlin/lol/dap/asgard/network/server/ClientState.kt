@@ -1,10 +1,10 @@
-package network.server
+package lol.dap.asgard.network.server
 
 enum class ClientState {
 
     NONE,
+    DISCONNECTED,
     STATUS,
-    HANDSHAKE,
     LOGIN,
     PLAY
 

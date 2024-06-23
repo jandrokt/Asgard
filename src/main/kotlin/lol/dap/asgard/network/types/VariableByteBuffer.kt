@@ -1,7 +1,7 @@
-package network.types
+package lol.dap.asgard.network.types
 
-import network.types.extensions.toVarInt
-import network.types.extensions.writeVarInt
+import lol.dap.asgard.network.types.extensions.toVarInt
+import lol.dap.asgard.network.types.extensions.writeVarInt
 import java.nio.ByteBuffer
 
 class VariableByteBuffer() : Collection<Byte> {

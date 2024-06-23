@@ -1,14 +1,36 @@
-package network.handling.handlers
+package lol.dap.asgard.network.handling.handlers
 
-import network.handling.Handler
-import network.packets.IncomingPacket
-import network.packets.incoming.status.PingPacket
-import network.packets.outgoing.status.PongPacket
-import network.packets.outgoing.status.StatusResponsePacket
-import network.server.Client
-import network.server.ClientState
+import lol.dap.asgard.Asgard
+import lol.dap.asgard.event_dispatching.AsgardEvents
+import lol.dap.asgard.event_dispatching.events.StatusEvent
+import lol.dap.asgard.motd.Motd
+import lol.dap.asgard.network.handling.Handler
+import lol.dap.asgard.network.handling.HandlerManager
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.packets.incoming.status.S01PingPacket
+import lol.dap.asgard.network.packets.outgoing.status.S01PongPacket
+import lol.dap.asgard.network.packets.outgoing.status.S00ResponsePacket
+import lol.dap.asgard.network.server.Client
+import lol.dap.asgard.network.server.ClientState
+import net.kyori.adventure.text.minimessage.MiniMessage
 
 class StatusFlowHandler : Handler() {
+
+    companion object {
+        private val mm = MiniMessage.miniMessage()
+
+       private val default = Motd(
+            Motd.Version(
+                "Asgard",
+                47
+            ),
+            Motd.Players(
+                max = 20,
+                online = 0
+            ),
+            mm.deserialize("<rainbow>An Asgard Server</rainbow>")
+        )
+    }
 
     init {
         on(ClientState.STATUS, 0x00, ::status)
@@ -16,29 +38,18 @@ class StatusFlowHandler : Handler() {
     }
 
     private suspend fun status(client: Client, packet: IncomingPacket) {
+        val event = StatusEvent(client, packet, default)
+        Asgard.eventDispatcher.dispatch(AsgardEvents.STATUS, event)
+
         // Send status
-        StatusResponsePacket("""
-            {
-                "version": {
-                    "name": "Asgard",
-                    "protocol": 47
-                },
-                "players": {
-                    "max": 100,
-                    "online": 0
-                },	
-                "description": {
-                    "text": "Hello world"
-                }
-            }
-        """.trimIndent()).send(client)
+        S00ResponsePacket(event.motd).send(client)
     }
 
     private suspend fun ping(client: Client, packet: IncomingPacket) {
-        if (packet !is PingPacket) return
+        if (packet !is S01PingPacket) return
 
         // Send pong
-        PongPacket(packet.payload).send(client)
+        S01PongPacket(packet.payload).send(client)
     }
 
 }

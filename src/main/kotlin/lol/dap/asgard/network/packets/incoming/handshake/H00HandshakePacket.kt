@@ -6,7 +6,7 @@ import lol.dap.asgard.network.server.ClientState
 import lol.dap.asgard.network.types.VarInt
 
 @Packet(ClientState.NONE, 0x00)
-data class HandshakePacket(
+data class H00HandshakePacket(
     val protocolVersion: VarInt,
     val serverAddress: String,
     val serverPort: UShort,

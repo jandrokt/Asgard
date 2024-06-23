@@ -1,4 +1,4 @@
-package network.packets.annotations
+package lol.dap.asgard.network.packets.annotations
 
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)

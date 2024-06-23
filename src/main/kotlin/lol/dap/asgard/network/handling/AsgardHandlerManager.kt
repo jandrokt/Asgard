@@ -1,22 +1,22 @@
-package network.handling
+package lol.dap.asgard.network.handling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import extensions.toHexRepresentation
-import extensions.toRegularString
-import network.handlers.HandlerManager
-import network.handling.handlers.HandshakeHandler
-import network.handling.handlers.LoginFlowHandler
-import network.handling.handlers.StatusFlowHandler
-import network.packets.incoming.handshake.HandshakePacket
-import network.packets.IncomingPacket
-import network.packets.annotations.Packet
-import network.packets.incoming.login.LoginStartPacket
-import network.packets.incoming.status.PingPacket
-import network.packets.incoming.status.StatusRequestPacket
-import network.packets.serializers.BytePacketDeserializer
-import network.server.Client
-import network.server.ClientState
-import network.types.extensions.getVarInt
+import lol.dap.asgard.event_dispatching.EventDispatcher
+import lol.dap.asgard.extensions.toHexRepresentation
+import lol.dap.asgard.extensions.toRegularString
+import lol.dap.asgard.network.handling.handlers.HandshakeHandler
+import lol.dap.asgard.network.handling.handlers.LoginFlowHandler
+import lol.dap.asgard.network.handling.handlers.StatusFlowHandler
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.packets.annotations.Packet
+import lol.dap.asgard.network.packets.incoming.handshake.H00HandshakePacket
+import lol.dap.asgard.network.packets.incoming.login.L00LoginStartPacket
+import lol.dap.asgard.network.packets.incoming.status.S01PingPacket
+import lol.dap.asgard.network.packets.incoming.status.S00RequestPacket
+import lol.dap.asgard.network.packets.serializers.BytePacketDeserializer
+import lol.dap.asgard.network.server.Client
+import lol.dap.asgard.network.server.ClientState
+import lol.dap.asgard.network.types.extensions.getVarInt
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 
@@ -43,14 +43,14 @@ class AsgardHandlerManager : HandlerManager {
     }
 
     private fun registerAllPacketTypes() {
-        registerPacketType(HandshakePacket::class)
+        registerPacketType(H00HandshakePacket::class)
 
         // Login
-        registerPacketType(LoginStartPacket::class)
+        registerPacketType(L00LoginStartPacket::class)
 
         // Status
-        registerPacketType(StatusRequestPacket::class)
-        registerPacketType(PingPacket::class)
+        registerPacketType(S00RequestPacket::class)
+        registerPacketType(S01PingPacket::class)
     }
 
     override fun registerHandler(handler: Handler) {
@@ -88,7 +88,7 @@ class AsgardHandlerManager : HandlerManager {
 
             packetAnnotation?.let {
                 (it.id == packetId) && (it.state == clientState)
-            } ?: false
+            } == true
         } ?: throw NoSuchElementException("No packet type found for Client State $clientState and ID $packetId")
 
         return BytePacketDeserializer.deserialize(packetClass, packet)

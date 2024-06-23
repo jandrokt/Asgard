@@ -5,6 +5,6 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.server.ClientState
 
 @Packet(ClientState.LOGIN, 0x00)
-data class LoginStartPacket(
+data class L00LoginStartPacket(
     val username: String
 ) : IncomingPacket

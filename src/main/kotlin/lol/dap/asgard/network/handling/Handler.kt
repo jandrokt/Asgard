@@ -1,8 +1,8 @@
-package network.handling
+package lol.dap.asgard.network.handling
 
-import network.packets.IncomingPacket
-import network.server.Client
-import network.server.ClientState
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.server.Client
+import lol.dap.asgard.network.server.ClientState
 
 typealias PacketHandler = suspend (Client, IncomingPacket) -> Unit
 

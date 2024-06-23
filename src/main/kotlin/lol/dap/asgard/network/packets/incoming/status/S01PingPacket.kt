@@ -5,6 +5,6 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.server.ClientState
 
 @Packet(ClientState.STATUS, 0x01)
-data class PingPacket(
+data class S01PingPacket(
     val payload: Long
 ) : IncomingPacket

@@ -1,6 +1,6 @@
-package network.packets
+package lol.dap.asgard.network.packets
 
-import network.server.Client
+import lol.dap.asgard.network.server.Client
 
 interface OutgoingPacket {
 

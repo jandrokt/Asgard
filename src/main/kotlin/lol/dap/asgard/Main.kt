@@ -2,32 +2,53 @@ package lol.dap.asgard
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
-import network.handling.AsgardHandlerManager
-import network.handlers.HandlerManager
-import network.server.AsgardServer
-import org.koin.core.Koin
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
+import lol.dap.asgard.event_dispatching.AsgardEventDispatcher
+import lol.dap.asgard.event_dispatching.AsgardEvents
+import lol.dap.asgard.event_dispatching.events.PlayerLoginEvent
+import lol.dap.asgard.instances.AsgardInstance
+import lol.dap.asgard.instances.SlimeChunkProvider
+import lol.dap.asgard.network.handling.AsgardHandlerManager
+import lol.dap.asgard.network.server.AsgardServer
+import lol.dap.asgard.utilities.Vec3D
+import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.Path
 
-val logger = KotlinLogging.logger {}
+object Asgard {
 
-val networkingModule = module {
-    single<HandlerManager> { AsgardHandlerManager() }
-    single { AsgardServer("0.0.0.0", 25565, get()) }
-}
+    val logger = KotlinLogging.logger {}
 
-lateinit var koin: Koin
+    val eventDispatcher = AsgardEventDispatcher()
 
-suspend fun main() = runBlocking {
-    val koinApp = startKoin {
-        modules(networkingModule)
+    val handler = AsgardHandlerManager()
+    val server = AsgardServer("0.0.0.0", 25565)
+
+    suspend fun init() {
+        logger.info { "Starting Asgard..." }
+
+        logger.info { "Loading Downvault..." }
+        val start = System.currentTimeMillis()
+        val provider = SlimeChunkProvider(
+            ByteBuffer.wrap(
+                Files.readAllBytes(
+                    Path.of("Downvault.slime")
+                )
+            )
+        )
+        logger.info { "Downvault loaded in " + (System.currentTimeMillis() - start) + "ms" }
+        val instance = AsgardInstance(0, "Downvault", Vec3D(0.0, 0.0, 0.0), provider, mutableListOf())
+
+        eventDispatcher.on(AsgardEvents.PLAYER_LOGIN) { event ->
+            event as PlayerLoginEvent
+            event.loginInstance = instance
+        }
+
+        // TODO: MEASURE IMPACT OF USING REFLECTION TO DESERIALIZE/SERIALIZE PACKETS
+        server.start()
     }
 
-    logger.info { "Starting Asgard..." }
+}
 
-    koin = koinApp.koin
-    koin.get<AsgardServer>().start()
-
-    stopKoin()
+suspend fun main() = runBlocking {
+    Asgard.init()
 }

@@ -1,4 +1,4 @@
-package extensions
+package lol.dap.asgard.extensions
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

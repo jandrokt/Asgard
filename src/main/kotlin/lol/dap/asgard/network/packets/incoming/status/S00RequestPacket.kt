@@ -5,4 +5,4 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.server.ClientState
 
 @Packet(ClientState.STATUS, 0x00)
-class StatusRequestPacket : IncomingPacket
+class S00RequestPacket : IncomingPacket

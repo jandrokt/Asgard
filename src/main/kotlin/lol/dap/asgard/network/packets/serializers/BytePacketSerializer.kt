@@ -1,10 +1,10 @@
-package network.packets.serializers
+package lol.dap.asgard.network.packets.serializers
 
-import network.packets.OutgoingPacket
-import network.packets.annotations.SerialOrder
-import network.types.VarInt
-import network.types.VariableByteBuffer
-import network.types.extensions.toVarInt
+import lol.dap.asgard.network.packets.OutgoingPacket
+import lol.dap.asgard.network.packets.annotations.SerialOrder
+import lol.dap.asgard.network.types.VarInt
+import lol.dap.asgard.network.types.VariableByteBuffer
+import lol.dap.asgard.network.types.extensions.toVarInt
 import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation

@@ -1,7 +1,7 @@
-package network.types.extensions
+package lol.dap.asgard.network.types.extensions
 
 import io.ktor.utils.io.*
-import network.types.VarInt
+import lol.dap.asgard.network.types.VarInt
 import java.nio.ByteBuffer
 import kotlin.experimental.and
 

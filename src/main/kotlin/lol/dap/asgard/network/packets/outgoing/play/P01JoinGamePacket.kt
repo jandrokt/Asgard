@@ -5,7 +5,7 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.packets.annotations.SerialOrder
 
 @Packet(id = 0x01)
-data class JoinGamePacket(
+data class P01JoinGamePacket(
     @SerialOrder(1) val entityId: Int,
     @SerialOrder(2) val gameMode: UByte,
     @SerialOrder(3) val dimension: Byte,

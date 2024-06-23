@@ -1,8 +1,8 @@
-package network.packets.serializers
+package lol.dap.asgard.network.packets.serializers
 
-import network.packets.IncomingPacket
-import network.types.VarInt
-import network.types.extensions.getVarInt
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.types.VarInt
+import lol.dap.asgard.network.types.extensions.getVarInt
 import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 

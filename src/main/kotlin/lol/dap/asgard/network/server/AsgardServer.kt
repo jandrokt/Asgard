@@ -1,18 +1,17 @@
-package network.server
+package lol.dap.asgard.network.server
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import extensions.async
-import extensions.toRegularString
-import network.handlers.HandlerManager
+import lol.dap.asgard.Asgard
+import lol.dap.asgard.extensions.async
+import lol.dap.asgard.extensions.toRegularString
+import lol.dap.asgard.network.handling.HandlerManager
 
 class AsgardServer(
     private val host: String,
-    private val port: Int,
-
-    private val packetHandlerManager: HandlerManager
+    private val port: Int
 ) {
 
     private val logger = KotlinLogging.logger {}
@@ -36,7 +35,7 @@ class AsgardServer(
                     try {
                         while (!clientSocket.isClosed) {
                             val packet = client.readPacket()
-                            packetHandlerManager.passToHandlers(client, packet)
+                            Asgard.handler.passToHandlers(client, packet)
                         }
                     } catch (_: ClosedReceiveChannelException) {
                         // Most likely a client disconnect

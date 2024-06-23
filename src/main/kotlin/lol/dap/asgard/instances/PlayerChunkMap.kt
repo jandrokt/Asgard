@@ -1,4 +1,7 @@
 package lol.dap.asgard.instances
 
-interface ChunkGenerator {
+class PlayerChunkMap {
+
+
+
 }

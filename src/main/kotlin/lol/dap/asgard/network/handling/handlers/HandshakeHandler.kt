@@ -1,10 +1,11 @@
-package network.handling.handlers
+package lol.dap.asgard.network.handling.handlers
 
-import network.handling.Handler
-import network.packets.IncomingPacket
-import network.packets.incoming.handshake.HandshakePacket
-import network.server.Client
-import network.server.ClientState
+import lol.dap.asgard.network.handling.Handler
+import lol.dap.asgard.network.handling.HandlerManager
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.packets.incoming.handshake.H00HandshakePacket
+import lol.dap.asgard.network.server.Client
+import lol.dap.asgard.network.server.ClientState
 
 class HandshakeHandler : Handler() {
 
@@ -13,7 +14,7 @@ class HandshakeHandler : Handler() {
     }
 
     private fun handshake(client: Client, packet: IncomingPacket) {
-        if (packet !is HandshakePacket) return
+        if (packet !is H00HandshakePacket) return
 
         client.state = if (packet.nextState.toInt() == 2) {
             ClientState.LOGIN

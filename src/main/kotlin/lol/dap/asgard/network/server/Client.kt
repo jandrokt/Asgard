@@ -1,16 +1,20 @@
-package network.server
+package lol.dap.asgard.network.server
 
 import io.ktor.network.sockets.*
-import network.packets.OutgoingPacket
-import network.types.VariableByteBuffer
+import lol.dap.asgard.entities.Entity
+import lol.dap.asgard.network.packets.OutgoingPacket
 import java.nio.ByteBuffer
+import java.util.UUID
 
 interface Client {
 
     var address: SocketAddress
 
+    var uuid: UUID
     var username: String
     var state: ClientState
+
+    var entity: Entity?
 
     suspend fun readPacket(): ByteBuffer
 

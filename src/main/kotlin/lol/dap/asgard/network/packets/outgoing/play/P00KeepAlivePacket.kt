@@ -5,6 +5,6 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.types.VarInt
 
 @Packet(id = 0x00)
-data class KeepAlivePacket(
+data class P00KeepAlivePacket(
     val id: VarInt
 ) : OutgoingPacket

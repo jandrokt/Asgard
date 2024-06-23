@@ -1,17 +1,23 @@
-package network.handling.handlers
+package lol.dap.asgard.network.handling.handlers
 
 import kotlinx.coroutines.delay
-import extensions.async
-import network.handling.Handler
-import network.packets.IncomingPacket
-import network.packets.incoming.login.LoginStartPacket
-import network.packets.outgoing.KeepAlivePacket
-import network.packets.outgoing.login.LoginPluginRequestPacket
-import network.packets.outgoing.login.LoginSuccessPacket
-import network.server.AsgardClient
-import network.server.Client
-import network.server.ClientState
-import network.types.extensions.toVarInt
+import lol.dap.asgard.Asgard
+import lol.dap.asgard.entities.PlayerEntity
+import lol.dap.asgard.event_dispatching.AsgardEvents
+import lol.dap.asgard.event_dispatching.events.PlayerEntityCreationEvent
+import lol.dap.asgard.event_dispatching.events.PlayerLoginEvent
+import lol.dap.asgard.extensions.async
+import lol.dap.asgard.network.handling.Handler
+import lol.dap.asgard.network.handling.HandlerManager
+import lol.dap.asgard.network.packets.IncomingPacket
+import lol.dap.asgard.network.packets.incoming.login.L00LoginStartPacket
+import lol.dap.asgard.network.packets.outgoing.login.L02LoginSuccessPacket
+import lol.dap.asgard.network.packets.outgoing.play.P00KeepAlivePacket
+import lol.dap.asgard.network.server.AsgardClient
+import lol.dap.asgard.network.server.Client
+import lol.dap.asgard.network.server.ClientState
+import lol.dap.asgard.network.types.extensions.toVarInt
+import java.util.UUID
 
 class LoginFlowHandler : Handler() {
 
@@ -20,37 +26,39 @@ class LoginFlowHandler : Handler() {
     }
 
     private suspend fun loginStart(client: Client, packet: IncomingPacket) {
-        if (packet !is LoginStartPacket || client !is AsgardClient) return
+        if (packet !is L00LoginStartPacket || client !is AsgardClient) return
 
+        client.uuid = UUID.nameUUIDFromBytes("OfflinePlayer:${client.username}".toByteArray())
         client.username = packet.username
         client.state = ClientState.PLAY
 
-        //SetCompressionPacket((-1).toVarInt()).send(client)
+        val loginEvent = PlayerLoginEvent(client, packet, client.uuid, client.username, null)
+        Asgard.eventDispatcher.dispatch(AsgardEvents.PLAYER_LOGIN, loginEvent)
 
-        LoginPluginRequestPacket(
-            messageId = 0,
-            channel = "velocity:player_info",
-            data = ByteArray(1) { 1 }
+        if (loginEvent.cancelled) {
+            if (loginEvent.cancelReason != null) {
+                client.disconnect(loginEvent.cancelReason!!)
+            } else {
+                client.disconnect("Login failed!")
+            }
+            return
+        }
+
+        L02LoginSuccessPacket(
+            uuid = loginEvent.uuid.toString(),
+            username = loginEvent.username
         ).send(client)
 
-        LoginSuccessPacket(
-            uuid = "00000000-0000-0000-0000-000000000000",
-            username = "Dap",
-        ).send(client)
+        if (loginEvent.loginInstance == null) {
+            client.disconnect("No instance was assigned to you during login!")
+            return
+        }
 
-        /*JoinGamePacket(
-            entityId = 0,
-            gameMode = 0u,
-            dimension = 0,
-            difficulty = 0u,
-            maxPlayers = 1u,
-            levelType = "flat",
-            reducedDebugInfo = false
-        ).send(client)*/
+        loginEvent.loginInstance!!.addClient(client)
 
         async {
             delay(1000)
-            KeepAlivePacket(0.toVarInt()).send(client)
+            P00KeepAlivePacket(0.toVarInt()).send(client)
         }
     }
 
