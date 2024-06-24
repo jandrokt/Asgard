@@ -27,25 +27,7 @@ object Asgard {
     suspend fun init() {
         logger.info { "Starting Asgard..." }
 
-        logger.info { "Loading Downvault..." }
-        val start = System.currentTimeMillis()
-        val provider = SlimeChunkProvider(
-            DataInputStream(
-                Files.readAllBytes(
-                    Path.of("Magicae Library.slime")
-                ).inputStream()
-            )
-        )
-        logger.info { "Downvault loaded in " + (System.currentTimeMillis() - start) + "ms" }
-        val instance = AsgardInstance(0, "Downvault", Vec3D(0.5, 66.0, 0.5), provider, 10, mutableListOf())
-        logger.info { instance.chunkProvider.getBlockAt(1, 63, 7) }
 
-        eventDispatcher.on(AsgardEvents.PLAYER_LOGIN) { event ->
-            event as PlayerLoginEvent
-            event.loginInstance = instance
-        }
-
-        // TODO: MEASURE IMPACT OF USING REFLECTION TO DESERIALIZE/SERIALIZE PACKETS
         server.start()
     }
 
