@@ -83,7 +83,7 @@ class AsgardPluginLoader : PluginLoader {
         }
 
         for (plugin in plugins) {
-            plugin.onEnable()
+            enablePlugin(plugin)
         }
     }
 
