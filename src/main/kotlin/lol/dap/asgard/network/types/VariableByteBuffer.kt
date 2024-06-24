@@ -88,6 +88,32 @@ class VariableByteBuffer() : Collection<Byte> {
         buffer.add(index + 1, short.toByte())
     }
 
+    fun putUShort(ushort: UShort) {
+        buffer.add((ushort.toInt() shr 8).toByte())
+        buffer.add(ushort.toByte())
+    }
+
+    fun putUShort(index: Int, ushort: UShort) {
+        buffer.add(index, (ushort.toInt() shr 8).toByte())
+        buffer.add(index + 1, ushort.toByte())
+    }
+
+    fun putFloat(float: Float) {
+        putInt(float.toBits())
+    }
+
+    fun putFloat(index: Int, float: Float) {
+        putInt(index, float.toBits())
+    }
+
+    fun putDouble(double: Double) {
+        putLong(double.toBits())
+    }
+
+    fun putDouble(index: Int, double: Double) {
+        putLong(index, double.toBits())
+    }
+
     fun putString(string: String) {
         val bytes = string.toByteArray(Charsets.UTF_8)
         putVarInt(bytes.size.toVarInt())

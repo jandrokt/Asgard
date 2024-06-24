@@ -6,17 +6,25 @@ import lol.dap.asgard.entities.EntityType
 import lol.dap.asgard.entities.LivingEntity
 import lol.dap.asgard.entities.PlayerEntity
 import lol.dap.asgard.event_dispatching.AsgardEvents
-import lol.dap.asgard.event_dispatching.events.PlayerEntityCreationEvent
+import lol.dap.asgard.event_dispatching.events.play.PlayerEntityCreationEvent
+import lol.dap.asgard.network.packets.outgoing.play.P01JoinGamePacket
+import lol.dap.asgard.network.packets.outgoing.play.P05SpawnPositionPacket
+import lol.dap.asgard.network.packets.outgoing.play.P08PlayerPositionAndLookPacket
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.utilities.Vec3D
 
 class AsgardInstance(
     override val id: Int,
     override val name: String,
+
     override val spawnPosition: Vec3D,
     override val chunkProvider: ChunkProvider,
+    val viewDistance: Int,
+
     override val entities: MutableList<Entity>
 ) : Instance {
+
+    val chunkMap = PlayerChunkMap(chunkProvider, viewDistance)
 
     var entityCount = 0
 
@@ -28,13 +36,15 @@ class AsgardInstance(
     }
 
     override fun removeEntity(entity: Entity) {
-        if (entity is PlayerEntity && entity.client != null)
-            entity.client.entity = null
+        if (entity is PlayerEntity && entity.client != null) {
+            removeClient(entity.client)
+            return
+        }
 
         entities.remove(entity)
     }
 
-    override fun addClient(client: Client): Entity {
+    override suspend fun addClient(client: Client): Entity {
         val entity = PlayerEntity(
             client = client,
             id = entityCount++,
@@ -49,6 +59,23 @@ class AsgardInstance(
         entities.add(event.entity)
         client.entity = event.entity
 
+        chunkMap.addPlayer(event.entity)
+
+        client.writePacket(P01JoinGamePacket(
+            entity.id,
+            1.toUByte(),
+            0.toByte(),
+            0.toUByte(),
+            100.toUByte(),
+            "default",
+            false
+        ))
+
+        chunkMap.updatePlayerChunks(event.entity)
+
+        client.writePacket(P05SpawnPositionPacket(spawnPosition))
+        client.writePacket(P08PlayerPositionAndLookPacket(spawnPosition, 0.0f, 0.0f))
+
         return entity
     }
 
@@ -56,6 +83,7 @@ class AsgardInstance(
         val entity = entities.find { it is PlayerEntity && it.client == client } ?: return
 
         if (entity is PlayerEntity) {
+            chunkMap.removePlayer(entity)
             client.entity = null
         }
 

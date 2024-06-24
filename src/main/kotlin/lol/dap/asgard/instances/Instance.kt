@@ -18,7 +18,7 @@ interface Instance {
 
     fun removeEntity(entity: Entity)
 
-    fun addClient(client: Client): Entity
+    suspend fun addClient(client: Client): Entity
 
     fun removeClient(client: Client)
 

@@ -1,14 +1,15 @@
 package lol.dap.asgard.instances
 
 import com.github.luben.zstd.Zstd
-import lol.dap.asgard.utilities.Nibble
+import lol.dap.asgard.extensions.highNibble
+import lol.dap.asgard.extensions.lowNibble
 import lol.dap.asgard.utilities.Vec3D
-import java.nio.ByteBuffer
+import java.io.DataInputStream
 import java.util.BitSet
 import kotlin.math.ceil
 
 class SlimeChunkProvider(
-    val bytes: ByteBuffer
+    val bytes: DataInputStream
 ) : ChunkProvider {
 
     val properties: Properties
@@ -27,29 +28,23 @@ class SlimeChunkProvider(
     }
 
     fun readProperties(): Properties {
-        val magic = bytes.getShort()
+        val magic = bytes.readShort()
         if (magic != 0xB10B.toShort()) {
             throw IllegalArgumentException("Invalid magic number")
         }
 
-        val version = bytes.get()
-        val worldVersion = bytes.get()
+        val version = bytes.readByte()
+        val worldVersion = bytes.readByte()
 
-        val xPos = bytes.getShort()
-        val zPos = bytes.getShort()
+        val xPos = bytes.readShort()
+        val zPos = bytes.readShort()
 
-        val width = bytes.getShort()
-        val length = bytes.getShort()
+        val width = bytes.readShort()
+        val length = bytes.readShort()
 
         val bitmaskSize = ceil((width.toDouble() * length.toDouble()) / 8.0).toInt()
         val bitmask = ByteArray(bitmaskSize)
-        bytes.get(bitmask)
-
-        // reverse the bits in the bitmask
-        for (i in bitmask.indices) {
-            bitmask[i] = bitmask[i].reverseBits()
-        }
-
+        bytes.read(bitmask)
         val bitset = BitSet.valueOf(bitmask)
 
         return Properties(
@@ -64,16 +59,15 @@ class SlimeChunkProvider(
     }
 
     fun readChunks(): MutableList<Chunk> {
-        val compressedChunksSize = bytes.getInt()
-        val decompressedChunksSize = bytes.getInt()
+        val compressedChunksSize = bytes.readInt()
+        val decompressedChunksSize = bytes.readInt()
 
-        val compressedChunks = ByteArray(compressedChunksSize)
-        bytes.get(compressedChunks)
+        val compressedChunkData = ByteArray(compressedChunksSize)
+        val decompressedChunkData = ByteArray(decompressedChunksSize)
+        bytes.read(compressedChunkData)
 
-        val decompressedChunksArray = ByteArray(decompressedChunksSize)
-        Zstd.decompress(decompressedChunksArray, compressedChunks)
-
-        val decompressedChunks = ByteBuffer.wrap(decompressedChunksArray)
+        Zstd.decompress(decompressedChunkData, compressedChunkData)
+        val decompressedChunks = DataInputStream(decompressedChunkData.inputStream())
 
         val chunks = mutableListOf<Chunk>()
         for (z in 0 until properties.length) {
@@ -82,91 +76,90 @@ class SlimeChunkProvider(
 
                 if (properties.chunkBitSet.get(bitSetIndex)) {
                     // 16 * 16 integers
-                    val heightmap = mutableListOf<Int>()
+                    val heightmap = IntArray(256)
                     for (i in 0 until 256) {
-                        heightmap.add(decompressedChunks.getInt())
+                        heightmap[i] = decompressedChunks.readInt()
                     }
 
                     // 16 * 16 bytes
-                    val biomes = mutableListOf<Byte>()
-                    for (i in 0 until 256) {
-                        biomes.add(decompressedChunks.get())
-                    }
+                    val biomes = ByteArray(256)
+                    decompressedChunks.read(biomes)
 
                     val sectionsBitmask = ByteArray(2)
-                    decompressedChunks.get(sectionsBitmask)
-
+                    decompressedChunks.read(sectionsBitmask)
                     val sectionsBitset = BitSet.valueOf(sectionsBitmask)
 
-                    val sections = mutableListOf<Chunk.Section>()
-                    for (i in 0 until 16) {
-                        if (sectionsBitset.get(i)) {
-                            val blockLight = mutableListOf<Byte>()
-                            if (decompressedChunks.get() != 0.toByte()) {
+                    val sections = Array<Chunk.Section>(16) { index ->
+                        if (sectionsBitset.get(index)) {
+                            // Block light
+                            val blockLightBytes = ByteArray(2048)
+                            val blockLightNibbles = ByteArray(4096)
+                            if (decompressedChunks.readBoolean()) {
+                                decompressedChunks.read(blockLightBytes)
+
                                 for (j in 0 until 2048) {
-                                    blockLight.add(decompressedChunks.get())
+                                    val byte = blockLightBytes[j]
+                                    blockLightNibbles[j * 2] = byte.lowNibble()
+                                    blockLightNibbles[j * 2 + 1] = byte.highNibble()
                                 }
                             }
 
-                            val blockLightNibbles = mutableListOf<Nibble>()
+                            val blockTypes = ByteArray(4096)
+                            decompressedChunks.read(blockTypes)
+
+                            // Block Data
+                            val dataBytes = ByteArray(2048)
+                            val dataNibbles = ByteArray(4096)
+                            decompressedChunks.read(dataBytes)
+
                             for (j in 0 until 2048) {
-                                val (high, low) = Nibble.fromByte(blockLight[j])
-                                blockLightNibbles.add(high)
-                                blockLightNibbles.add(low)
+                                val byte = dataBytes[j]
+                                dataNibbles[j * 2] = byte.lowNibble()
+                                dataNibbles[j * 2 + 1] = byte.highNibble()
                             }
 
-                            val blockTypes = mutableListOf<Byte>()
-                            for (j in 0 until 4096) {
-                                blockTypes.add(decompressedChunks.get())
-                            }
+                            // Skylight
+                            val skylightBytes = ByteArray(2048)
+                            val skylightNibbles = ByteArray(4096)
+                            if (decompressedChunks.readBoolean()) {
+                                decompressedChunks.read(skylightBytes)
 
-                            val data = mutableListOf<Byte>()
-                            for (j in 0 until 2048) {
-                                data.add(decompressedChunks.get())
-                            }
-
-                            val dataNibbles = mutableListOf<Nibble>()
-                            for (j in 0 until 2048) {
-                                val (high, low) = Nibble.fromByte(data[j])
-                                dataNibbles.add(high)
-                                dataNibbles.add(low)
-                            }
-
-                            val skyLight = mutableListOf<Byte>()
-                            if (decompressedChunks.get() != 0.toByte()) {
                                 for (j in 0 until 2048) {
-                                    skyLight.add(decompressedChunks.get())
+                                    val byte = skylightBytes[j]
+                                    skylightNibbles[j * 2] = byte.lowNibble()
+                                    skylightNibbles[j * 2 + 1] = byte.highNibble()
                                 }
                             }
 
-                            val skyLightNibbles = mutableListOf<Nibble>()
-                            for (j in 0 until 2048) {
-                                val (high, low) = Nibble.fromByte(skyLight[j])
-                                skyLightNibbles.add(high)
-                                skyLightNibbles.add(low)
-                            }
+                            val blocks = Array<Block>(4096) { blockIndex ->
+                                // y z x
+                                val blockX = blockIndex and 0xF
+                                val blockY = (blockIndex shr 8) + (index shl 4)
+                                val blockZ = (blockIndex shr 4) and 0xF
 
-                            val blocks = mutableListOf<Block>()
-                            for (j in 0 until 4096) {
                                 val position = Vec3D(
-                                    x * 16 + (j % 16).toDouble(),
-                                    heightmap[j / 16].toDouble(),
-                                    z * 16 + (j / 16).toDouble()
+                                    blockX.toDouble(),
+                                    blockY.toDouble(),
+                                    blockZ.toDouble()
                                 )
 
-                                val material = blockTypes[j].toInt()
-                                val data = dataNibbles[j]
-                                val blockLight = blockLightNibbles[j]
-                                val skyLight = skyLightNibbles[j]
+                                val material = blockTypes[blockIndex].toUByte()
+                                val data = dataNibbles[blockIndex]
+                                val blockLight = blockLightNibbles[blockIndex]
+                                val skylight = skylightNibbles[blockIndex]
 
-                                blocks.add(Block(position, material, data, blockLight, skyLight))
+                                Block(position, material, data, blockLight, skylight)
                             }
 
-                            sections.add(Chunk.Section(i, blocks))
+                            Chunk.Section(index, blocks)
+                        } else {
+                            Chunk.Section(index, emptyArray<Block>())
                         }
                     }
 
-                    chunks.add(Chunk(Chunk.Position(x, z), sections))
+                    chunks.add(Chunk(Chunk.Position(properties.xPos + x, properties.zPos + z), biomes, sections))
+                } else {
+                    chunks.add(Chunk(Chunk.Position(properties.xPos + x, properties.zPos + z), byteArrayOf(), emptyArray()))
                 }
             }
         }

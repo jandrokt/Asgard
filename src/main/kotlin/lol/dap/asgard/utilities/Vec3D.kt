@@ -6,8 +6,18 @@ data class Vec3D(
     val z: Double
 ) {
 
-    fun equals(other: Vec3D): Boolean {
-        return x == other.x && y == other.y && z == other.z
+    override fun equals(other: Any?): Boolean {
+        return when (other) {
+            is Vec3D -> x == other.x && y == other.y && z == other.z
+            else -> false
+        }
+    }
+
+    override fun hashCode(): Int {
+        var result = x.hashCode()
+        result = 31 * result + y.hashCode()
+        result = 31 * result + z.hashCode()
+        return result
     }
 
 }

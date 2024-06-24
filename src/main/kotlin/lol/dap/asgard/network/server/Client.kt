@@ -16,6 +16,9 @@ interface Client {
 
     var entity: Entity?
 
+    var keepAliveId: Int
+    var lastKeepAliveResponse: Long
+
     suspend fun readPacket(): ByteBuffer
 
     suspend fun writePacket(packet: ByteBuffer)
@@ -23,5 +26,9 @@ interface Client {
     suspend fun <T : OutgoingPacket> writePacket(packet: T)
 
     suspend fun disconnect(reason: String = "")
+
+    fun startKeepAlive()
+
+    fun stopKeepAlive()
 
 }

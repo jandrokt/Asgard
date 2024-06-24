@@ -8,13 +8,18 @@ import lol.dap.asgard.Asgard
 import lol.dap.asgard.extensions.async
 import lol.dap.asgard.extensions.toRegularString
 import lol.dap.asgard.network.handling.HandlerManager
+import java.util.NoSuchElementException
 
 class AsgardServer(
     private val host: String,
     private val port: Int
 ) {
 
-    private val logger = KotlinLogging.logger {}
+    companion object {
+
+        private val logger = KotlinLogging.logger {}
+
+    }
 
     private var started = false
     private val serverSocket = aSocket(SelectorManager()).tcp().bind(host, port)
@@ -34,8 +39,14 @@ class AsgardServer(
                 async {
                     try {
                         while (!clientSocket.isClosed) {
-                            val packet = client.readPacket()
-                            Asgard.handler.passToHandlers(client, packet)
+                            try {
+                                val packet = client.readPacket()
+                                Asgard.handler.passToHandlers(client, packet)
+                            } catch (_: ClosedReceiveChannelException) {
+                                client.disconnect()
+                            } catch (e: Exception) {
+                                logger.error(e) { "An error occurred while reading a packet from ${client.address.toRegularString()}" }
+                            }
                         }
                     } catch (_: ClosedReceiveChannelException) {
                         // Most likely a client disconnect

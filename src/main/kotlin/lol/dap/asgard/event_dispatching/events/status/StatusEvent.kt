@@ -1,4 +1,4 @@
-package lol.dap.asgard.event_dispatching.events
+package lol.dap.asgard.event_dispatching.events.status
 
 import lol.dap.asgard.event_dispatching.Event
 import lol.dap.asgard.motd.Motd

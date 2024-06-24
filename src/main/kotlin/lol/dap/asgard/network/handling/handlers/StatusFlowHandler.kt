@@ -2,10 +2,9 @@ package lol.dap.asgard.network.handling.handlers
 
 import lol.dap.asgard.Asgard
 import lol.dap.asgard.event_dispatching.AsgardEvents
-import lol.dap.asgard.event_dispatching.events.StatusEvent
+import lol.dap.asgard.event_dispatching.events.status.StatusEvent
 import lol.dap.asgard.motd.Motd
 import lol.dap.asgard.network.handling.Handler
-import lol.dap.asgard.network.handling.HandlerManager
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.packets.incoming.status.S01PingPacket
 import lol.dap.asgard.network.packets.outgoing.status.S01PongPacket
@@ -39,7 +38,7 @@ class StatusFlowHandler : Handler() {
 
     private suspend fun status(client: Client, packet: IncomingPacket) {
         val event = StatusEvent(client, packet, default)
-        Asgard.eventDispatcher.dispatch(AsgardEvents.STATUS, event)
+        Asgard.eventDispatcher.dispatch(AsgardEvents.STATUS_REQUEST, event)
 
         // Send status
         S00ResponsePacket(event.motd).send(client)

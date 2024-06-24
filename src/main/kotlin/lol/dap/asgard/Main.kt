@@ -4,12 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import lol.dap.asgard.event_dispatching.AsgardEventDispatcher
 import lol.dap.asgard.event_dispatching.AsgardEvents
-import lol.dap.asgard.event_dispatching.events.PlayerLoginEvent
+import lol.dap.asgard.event_dispatching.events.play.PlayerLoginEvent
 import lol.dap.asgard.instances.AsgardInstance
 import lol.dap.asgard.instances.SlimeChunkProvider
 import lol.dap.asgard.network.handling.AsgardHandlerManager
 import lol.dap.asgard.network.server.AsgardServer
 import lol.dap.asgard.utilities.Vec3D
+import java.io.DataInputStream
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,14 +30,15 @@ object Asgard {
         logger.info { "Loading Downvault..." }
         val start = System.currentTimeMillis()
         val provider = SlimeChunkProvider(
-            ByteBuffer.wrap(
+            DataInputStream(
                 Files.readAllBytes(
-                    Path.of("Downvault.slime")
-                )
+                    Path.of("Magicae Library.slime")
+                ).inputStream()
             )
         )
         logger.info { "Downvault loaded in " + (System.currentTimeMillis() - start) + "ms" }
-        val instance = AsgardInstance(0, "Downvault", Vec3D(0.0, 0.0, 0.0), provider, mutableListOf())
+        val instance = AsgardInstance(0, "Downvault", Vec3D(0.5, 66.0, 0.5), provider, 10, mutableListOf())
+        logger.info { instance.chunkProvider.getBlockAt(1, 63, 7) }
 
         eventDispatcher.on(AsgardEvents.PLAYER_LOGIN) { event ->
             event as PlayerLoginEvent

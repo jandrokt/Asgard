@@ -33,10 +33,7 @@ object BytePacketSerializer {
         }
 
         typeSerializers[ByteArray::class] = { byteBuffer, value ->
-            if (value !is ByteArray) throw IllegalArgumentException("Value must be a ByteArray")
-
-            byteBuffer.putVarInt(value.size.toVarInt())
-            byteBuffer.putBytes(value)
+            byteBuffer.putBytes(value as ByteArray)
         }
 
         typeSerializers[Long::class] = { byteBuffer, value ->
@@ -49,6 +46,18 @@ object BytePacketSerializer {
 
         typeSerializers[Short::class] = { byteBuffer, value ->
             byteBuffer.putShort(value as Short)
+        }
+
+        typeSerializers[UShort::class] = { byteBuffer, value ->
+            byteBuffer.putUShort(value as UShort)
+        }
+
+        typeSerializers[Float::class] = { byteBuffer, value ->
+            byteBuffer.putFloat(value as Float)
+        }
+
+        typeSerializers[Double::class] = { byteBuffer, value ->
+            byteBuffer.putDouble(value as Double)
         }
 
         typeSerializers[String::class] = { byteBuffer, value ->
