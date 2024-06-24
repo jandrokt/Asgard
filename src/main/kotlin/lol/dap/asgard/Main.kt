@@ -24,10 +24,27 @@ object Asgard {
     suspend fun init() {
         logger.info { "Starting Asgard..." }
 
+        addShutdownHook()
+
         pluginLoader.loadPlugins()
         pluginLoader.enablePlugins()
 
         server.start()
+        server.stop()
+    }
+
+    suspend fun shutdown() {
+        logger.info { "Shutting down Asgard..." }
+
+        pluginLoader.disablePlugins()
+    }
+
+    private fun addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(Thread {
+            runBlocking {
+                shutdown()
+            }
+        })
     }
 
 }

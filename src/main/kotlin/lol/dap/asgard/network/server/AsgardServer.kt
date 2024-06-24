@@ -64,4 +64,9 @@ class AsgardServer(
         }
     }
 
+    suspend fun stop() {
+        started = false
+        serverSocket.close()
+    }
+
 }
