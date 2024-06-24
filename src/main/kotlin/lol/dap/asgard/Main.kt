@@ -17,7 +17,7 @@ import java.nio.file.Path
 
 object Asgard {
 
-    val logger = KotlinLogging.logger {}
+    private val logger = KotlinLogging.logger {}
 
     val eventDispatcher = AsgardEventDispatcher()
 
