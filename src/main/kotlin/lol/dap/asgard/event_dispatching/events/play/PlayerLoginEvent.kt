@@ -1,7 +1,7 @@
 package lol.dap.asgard.event_dispatching.events.play
 
 import lol.dap.asgard.event_dispatching.Event
-import lol.dap.asgard.instances.Instance
+import lol.dap.asgard.instances.instances.Instance
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.server.Client
 import net.kyori.adventure.text.Component

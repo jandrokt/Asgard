@@ -1,11 +1,20 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.data
 
 import lol.dap.asgard.extensions.toBytes
 import lol.dap.asgard.network.types.VariableByteBuffer
 import lol.dap.asgard.utilities.Vec3D
+import kotlin.collections.filterNot
 import kotlin.collections.flatMap
+import kotlin.collections.fold
+import kotlin.collections.isEmpty
+import kotlin.collections.map
+import kotlin.collections.reversed
+import kotlin.collections.toByteArray
+import kotlin.collections.toList
+import kotlin.collections.withIndex
+import kotlin.toUShort
 
-class Chunk(
+data class Chunk(
     val position: Position,
     val biomes: ByteArray,
     val sections: Array<Section>

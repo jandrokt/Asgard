@@ -1,4 +1,4 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.instances
 
 import lol.dap.asgard.Asgard
 import lol.dap.asgard.entities.Entity
@@ -7,11 +7,14 @@ import lol.dap.asgard.entities.LivingEntity
 import lol.dap.asgard.entities.PlayerEntity
 import lol.dap.asgard.event_dispatching.AsgardEvents
 import lol.dap.asgard.event_dispatching.events.play.PlayerEntityCreationEvent
+import lol.dap.asgard.instances.chunk_providers.ChunkProvider
 import lol.dap.asgard.network.packets.outgoing.play.P01JoinGamePacket
 import lol.dap.asgard.network.packets.outgoing.play.P05SpawnPositionPacket
 import lol.dap.asgard.network.packets.outgoing.play.P08PlayerPositionAndLookPacket
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.utilities.Vec3D
+import kotlin.collections.find
+import kotlin.toUByte
 
 class AsgardInstance(
     override val id: Int,
@@ -61,15 +64,17 @@ class AsgardInstance(
 
         chunkMap.addPlayer(event.entity)
 
-        client.writePacket(P01JoinGamePacket(
-            entity.id,
-            1.toUByte(),
-            0.toByte(),
-            0.toUByte(),
-            100.toUByte(),
-            "default",
-            false
-        ))
+        client.writePacket(
+            P01JoinGamePacket(
+                entity.id,
+                1.toUByte(),
+                0.toByte(),
+                0.toUByte(),
+                100.toUByte(),
+                "default",
+                false
+            )
+        )
 
         chunkMap.updatePlayerChunks(event.entity)
 

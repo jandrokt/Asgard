@@ -1,6 +1,6 @@
 package lol.dap.asgard.network.packets.outgoing.play
 
-import lol.dap.asgard.instances.Chunk
+import lol.dap.asgard.instances.data.Chunk
 import lol.dap.asgard.network.packets.OutgoingPacket
 import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.packets.annotations.SerialOrder

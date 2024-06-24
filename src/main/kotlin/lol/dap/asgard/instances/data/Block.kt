@@ -1,4 +1,4 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.data
 
 import lol.dap.asgard.utilities.Vec3D
 

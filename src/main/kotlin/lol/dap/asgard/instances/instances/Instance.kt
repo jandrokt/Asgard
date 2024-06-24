@@ -1,7 +1,8 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.instances
 
 import lol.dap.asgard.entities.Entity
 import lol.dap.asgard.entities.EntityType
+import lol.dap.asgard.instances.chunk_providers.ChunkProvider
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.utilities.Vec3D
 

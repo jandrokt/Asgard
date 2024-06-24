@@ -1,6 +1,9 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.chunk_providers
 
+import lol.dap.asgard.instances.data.Block
+import lol.dap.asgard.instances.data.Chunk
 import lol.dap.asgard.utilities.Vec3D
+import kotlin.collections.getOrNull
 
 interface ChunkProvider {
 

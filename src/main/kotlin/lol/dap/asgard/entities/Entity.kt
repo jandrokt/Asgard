@@ -1,6 +1,6 @@
 package lol.dap.asgard.entities
 
-import lol.dap.asgard.instances.Instance
+import lol.dap.asgard.instances.instances.Instance
 import lol.dap.asgard.utilities.Vec3D
 
 interface Entity {

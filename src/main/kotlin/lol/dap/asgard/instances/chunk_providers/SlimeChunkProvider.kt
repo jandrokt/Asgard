@@ -1,12 +1,20 @@
-package lol.dap.asgard.instances
+package lol.dap.asgard.instances.chunk_providers
 
 import com.github.luben.zstd.Zstd
 import lol.dap.asgard.extensions.highNibble
 import lol.dap.asgard.extensions.lowNibble
+import lol.dap.asgard.instances.data.Block
+import lol.dap.asgard.instances.data.Chunk
 import lol.dap.asgard.utilities.Vec3D
 import java.io.DataInputStream
+import java.lang.IllegalArgumentException
 import java.util.BitSet
+import kotlin.collections.find
+import kotlin.collections.toList
+import kotlin.io.inputStream
 import kotlin.math.ceil
+import kotlin.ranges.until
+import kotlin.toUByte
 
 class SlimeChunkProvider(
     val bytes: DataInputStream
@@ -161,7 +169,13 @@ class SlimeChunkProvider(
 
                     chunks.add(Chunk(Chunk.Position(properties.xPos + x, properties.zPos + z), biomes, sections))
                 } else {
-                    chunks.add(Chunk(Chunk.Position(properties.xPos + x, properties.zPos + z), byteArrayOf(), emptyArray()))
+                    chunks.add(
+                        Chunk(
+                            Chunk.Position(properties.xPos + x, properties.zPos + z),
+                            byteArrayOf(),
+                            emptyArray()
+                        )
+                    )
                 }
             }
         }
