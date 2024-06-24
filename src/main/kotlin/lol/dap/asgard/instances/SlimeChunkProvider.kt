@@ -145,8 +145,10 @@ class SlimeChunkProvider(
 
                                 val material = blockTypes[blockIndex].toUByte()
                                 val data = dataNibbles[blockIndex]
-                                val blockLight = blockLightNibbles[blockIndex]
-                                val skylight = skylightNibbles[blockIndex]
+
+                                // TODO: Fix this (maybe)
+                                val blockLight = Byte.MAX_VALUE //blockLightNibbles[blockIndex]
+                                val skylight = Byte.MAX_VALUE //skylightNibbles[blockIndex]
 
                                 Block(position, material, data, blockLight, skylight)
                             }
