@@ -15,6 +15,8 @@ interface Instance {
     val chunkProvider: ChunkProvider
     val entities: List<Entity>
 
+    val chunkMap: PlayerChunkMap
+
     fun spawnEntity(entityType: EntityType): Entity
 
     fun removeEntity(entity: Entity)

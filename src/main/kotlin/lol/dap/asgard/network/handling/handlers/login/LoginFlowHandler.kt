@@ -1,4 +1,4 @@
-package lol.dap.asgard.network.handling.handlers
+package lol.dap.asgard.network.handling.handlers.login
 
 import lol.dap.asgard.Asgard
 import lol.dap.asgard.event_dispatching.AsgardEvents
@@ -11,6 +11,7 @@ import lol.dap.asgard.network.server.AsgardClient
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.network.server.ClientState
 import java.util.UUID
+import kotlin.text.toByteArray
 
 class LoginFlowHandler : Handler() {
 

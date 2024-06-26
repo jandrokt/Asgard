@@ -1,7 +1,6 @@
-package lol.dap.asgard.network.handling.handlers
+package lol.dap.asgard.network.handling.handlers.handshake
 
 import lol.dap.asgard.network.handling.Handler
-import lol.dap.asgard.network.handling.HandlerManager
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.packets.incoming.handshake.H00HandshakePacket
 import lol.dap.asgard.network.server.Client

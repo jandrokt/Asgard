@@ -1,40 +1,18 @@
 package lol.dap.asgard.network.handling
 
-import io.github.oshai.kotlinlogging.KotlinLogging
-import lol.dap.asgard.event_dispatching.EventDispatcher
-import lol.dap.asgard.extensions.toHexRepresentation
-import lol.dap.asgard.extensions.toRegularString
-import lol.dap.asgard.network.handling.handlers.HandshakeHandler
-import lol.dap.asgard.network.handling.handlers.KeepAliveHandler
-import lol.dap.asgard.network.handling.handlers.LoginFlowHandler
-import lol.dap.asgard.network.handling.handlers.StatusFlowHandler
+import lol.dap.asgard.network.handling.handlers.handshake.HandshakeHandler
+import lol.dap.asgard.network.handling.handlers.login.LoginFlowHandler
+import lol.dap.asgard.network.handling.handlers.play.KeepAliveHandler
+import lol.dap.asgard.network.handling.handlers.play.PositionHandler
+import lol.dap.asgard.network.handling.handlers.status.StatusFlowHandler
 import lol.dap.asgard.network.packets.IncomingPacket
-import lol.dap.asgard.network.packets.annotations.Packet
-import lol.dap.asgard.network.packets.incoming.handshake.H00HandshakePacket
-import lol.dap.asgard.network.packets.incoming.login.L00LoginStartPacket
-import lol.dap.asgard.network.packets.incoming.play.P00ClientKeepAlivePacket
-import lol.dap.asgard.network.packets.incoming.status.S01PingPacket
-import lol.dap.asgard.network.packets.incoming.status.S00RequestPacket
-import lol.dap.asgard.network.packets.serializers.BytePacketDeserializer
 import lol.dap.asgard.network.server.Client
-import lol.dap.asgard.network.server.ClientState
-import lol.dap.asgard.network.types.extensions.getVarInt
-import java.nio.ByteBuffer
-import kotlin.reflect.KClass
 
 class AsgardHandlerManager : HandlerManager {
 
-    private val logger = KotlinLogging.logger {}
-
     private val handlers = mutableListOf<Handler>()
-    private val packetTypes = mutableListOf<KClass<*>>()
 
     init {
-        registerAllHandlers()
-        registerAllPacketTypes()
-    }
-
-    private fun registerAllHandlers() {
         registerHandler(HandshakeHandler())
 
         // Login
@@ -43,68 +21,24 @@ class AsgardHandlerManager : HandlerManager {
         // Play
         registerHandler(KeepAliveHandler())
 
+        registerHandler(PositionHandler())
+
         // Status
         registerHandler(StatusFlowHandler())
-    }
-
-    private fun registerAllPacketTypes() {
-        registerPacketType(H00HandshakePacket::class)
-
-        // Login
-        registerPacketType(L00LoginStartPacket::class)
-
-        // Status
-        registerPacketType(S00RequestPacket::class)
-        registerPacketType(S01PingPacket::class)
-
-        // Play
-        registerPacketType(P00ClientKeepAlivePacket::class)
     }
 
     override fun registerHandler(handler: Handler) {
         handlers.add(handler)
     }
 
-    fun <T : IncomingPacket> registerPacketType(packet: KClass<T>) {
-        packetTypes.add(packet)
-    }
-
-    override suspend fun passToHandlers(client: Client, packet: ByteBuffer) {
-        if (packet.remaining() == 0) return
-
-        val packetId = packet.getVarInt().toInt()
-
-        logger.debug { "${client.address.toRegularString()} (${client.state}) sent a Packet ${packetId.toHexRepresentation()}" }
-
-        val incomingPacket = try {
-            constructIncomingPacket(client.state, packetId, packet)
-        } catch (_: NoSuchElementException) {
-            logger.warn { "No packet type found for Client State ${client.state} and ID $packetId" }
-            return
-        } catch (e: Exception) {
-            logger.error(e) { "Error while constructing incoming packet" }
-            return
-        }
-
+    override suspend fun passToHandlers(client: Client, packetId: Int, packet: IncomingPacket) {
         val handlers = handlers.filter { handler ->
             handler.canHandle(client.state, packetId)
         }
 
         for (handler in handlers) {
-            handler.handle(client, client.state, packetId, incomingPacket)
+            handler.handle(client, client.state, packetId, packet)
         }
-    }
-
-    private fun constructIncomingPacket(clientState: ClientState, packetId: Int, packet: ByteBuffer): IncomingPacket {
-        val packetClass = packetTypes.find { packetClass ->
-            val packetAnnotation = packetClass.annotations.find { it is Packet } as? Packet
-
-            packetAnnotation?.let {
-                (it.id == packetId) && (it.state == clientState)
-            } == true
-        } ?: throw NoSuchElementException("No packet type found for Client State $clientState and ID $packetId")
-
-        return BytePacketDeserializer.deserialize(packetClass, packet)
     }
 
 }

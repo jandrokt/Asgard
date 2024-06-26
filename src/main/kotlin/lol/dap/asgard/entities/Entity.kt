@@ -14,7 +14,12 @@ interface Entity {
     var maxHealth: Double
 
     var instance: Instance
+
     var position: Vec3D
     var velocity: Vec3D
+    var isOnGround: Boolean
+
+    var yaw: Float
+    var pitch: Float
 
 }

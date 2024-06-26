@@ -41,4 +41,18 @@ interface ChunkProvider {
 
     fun getBlockAt(vec: Vec3D) = getBlockAt(vec.x.toInt(), vec.y.toInt(), vec.z.toInt())
 
+    fun copy(): ChunkProvider {
+        return object : ChunkProvider {
+
+            override val chunks = this@ChunkProvider.chunks
+                .map { it.copy() }
+                .toMutableList()
+
+            override fun getChunkAt(pos: Chunk.Position): Chunk? {
+                return chunks.find { it.position == pos }
+            }
+
+        }
+    }
+
 }

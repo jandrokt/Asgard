@@ -27,7 +27,7 @@ class AsgardInstance(
     override val entities: MutableList<Entity>
 ) : Instance {
 
-    val chunkMap = PlayerChunkMap(chunkProvider, viewDistance)
+    override val chunkMap = AsgardPlayerChunkMap(chunkProvider, viewDistance)
 
     var entityCount = 0
 

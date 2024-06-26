@@ -20,46 +20,6 @@ data class Chunk(
     val sections: Array<Section>
 ) {
 
-    data class Position(
-        val x: Int,
-        val z: Int
-    ) {
-
-        companion object {
-
-            fun fromTridimensional(vec: Vec3D): Position {
-                return Position(vec.x.toInt() shr 4, vec.z.toInt() shr 4)
-            }
-
-        }
-
-    }
-
-    data class Section(
-        val y: Int,
-        val blocks: Array<Block>
-    ) {
-
-        fun toBytes(): Triple<ByteArray, ByteArray, ByteArray> {
-            // Combine block types and metadata into bytes and add to buffer
-            val blockTypesAndMetadata = ByteArray(8192)
-            for ((i, block) in blocks.withIndex()) {
-                val index = i * 2
-                blockTypesAndMetadata[index] = ((block.material.toInt() shl 4) or block.data.toInt()).toByte()
-                blockTypesAndMetadata[index + 1] = (block.material.toInt() shr 4).toByte()
-            }
-
-            // Combine block light nibbles into bytes and add to buffer
-            val blockLightBytes = blocks.map { it.blockLight }.toBytes().toByteArray()
-
-            // Combine skylight nibbles into bytes and add to buffer
-            val skylightBytes = blocks.map { it.skylight }.toBytes().toByteArray()
-
-            return Triple(blockTypesAndMetadata, blockLightBytes, skylightBytes)
-        }
-
-    }
-
     fun toBytes(groundUpContinuous: Boolean): Pair<ByteArray, UShort> {
         val buffer = VariableByteBuffer()
 
@@ -85,6 +45,58 @@ data class Chunk(
             }
 
         return Pair(buffer.toByteArray(), bitmask)
+    }
+
+    fun copy(): Chunk {
+        return Chunk(
+            position.copy(),
+            biomes.clone(),
+            sections.map { it.copy() }.toTypedArray()
+        )
+    }
+
+    data class Position(
+        val x: Int,
+        val z: Int
+    ) {
+
+        companion object {
+
+            fun fromTridimensional(vec: Vec3D): Position {
+                return Position(vec.x.toInt() shr 4, vec.z.toInt() shr 4)
+            }
+
+        }
+
+    }
+
+    data class Section(
+        val y: Int,
+        val blocks: Array<Block>
+    ) {
+
+        fun toBytes(): Triple<ByteArray, ByteArray, ByteArray> {
+            // Combine block types and metadata into bytes and add to buffer
+            val blockTypesAndMetadata = ByteArray(8192)
+            for ((i, block) in blocks.withIndex()) {
+                val index = i * 2
+                blockTypesAndMetadata[index] = ((block.material.id.toInt() shl 4) or block.data.toInt()).toByte()
+                blockTypesAndMetadata[index + 1] = (block.material.id.toInt() shr 4).toByte()
+            }
+
+            // Combine block light nibbles into bytes and add to buffer
+            val blockLightBytes = blocks.map { it.blockLight }.toBytes().toByteArray()
+
+            // Combine skylight nibbles into bytes and add to buffer
+            val skylightBytes = blocks.map { it.skylight }.toBytes().toByteArray()
+
+            return Triple(blockTypesAndMetadata, blockLightBytes, skylightBytes)
+        }
+
+        fun copy(): Section {
+            return Section(y, blocks.map { it.copy() }.toTypedArray())
+        }
+
     }
 
 }

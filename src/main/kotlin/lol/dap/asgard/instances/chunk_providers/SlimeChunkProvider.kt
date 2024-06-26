@@ -5,6 +5,7 @@ import lol.dap.asgard.extensions.highNibble
 import lol.dap.asgard.extensions.lowNibble
 import lol.dap.asgard.instances.data.Block
 import lol.dap.asgard.instances.data.Chunk
+import lol.dap.asgard.instances.data.Material
 import lol.dap.asgard.utilities.Vec3D
 import java.io.DataInputStream
 import java.lang.IllegalArgumentException
@@ -151,7 +152,7 @@ class SlimeChunkProvider(
                                     blockZ.toDouble()
                                 )
 
-                                val material = blockTypes[blockIndex].toUByte()
+                                val material = Material.fromId(blockTypes[blockIndex].toUByte())
                                 val data = dataNibbles[blockIndex]
 
                                 // TODO: Fix this (maybe)

@@ -1,4 +1,4 @@
-package lol.dap.asgard.network.handling.handlers
+package lol.dap.asgard.network.handling.handlers.play
 
 import lol.dap.asgard.Asgard
 import lol.dap.asgard.event_dispatching.AsgardEvents

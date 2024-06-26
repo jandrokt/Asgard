@@ -1,4 +1,4 @@
-package lol.dap.asgard.network.handling.handlers
+package lol.dap.asgard.network.handling.handlers.status
 
 import lol.dap.asgard.Asgard
 import lol.dap.asgard.event_dispatching.AsgardEvents
@@ -7,8 +7,8 @@ import lol.dap.asgard.motd.Motd
 import lol.dap.asgard.network.handling.Handler
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.packets.incoming.status.S01PingPacket
-import lol.dap.asgard.network.packets.outgoing.status.S01PongPacket
 import lol.dap.asgard.network.packets.outgoing.status.S00ResponsePacket
+import lol.dap.asgard.network.packets.outgoing.status.S01PongPacket
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.network.server.ClientState
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -19,16 +19,16 @@ class StatusFlowHandler : Handler() {
         private val mm = MiniMessage.miniMessage()
 
        private val default = Motd(
-            Motd.Version(
-                "Asgard",
-                47
-            ),
-            Motd.Players(
-                max = 20,
-                online = 0
-            ),
-            mm.deserialize("<rainbow>An Asgard Server</rainbow>")
-        )
+           Motd.Version(
+               "Asgard",
+               47
+           ),
+           Motd.Players(
+               max = 20,
+               online = 0
+           ),
+           mm.deserialize("<rainbow>An Asgard Server</rainbow>")
+       )
     }
 
     init {

@@ -17,7 +17,7 @@ import lol.dap.asgard.network.packets.annotations.Packet
 import lol.dap.asgard.network.packets.outgoing.login.L00DisconnectPacket
 import lol.dap.asgard.network.packets.outgoing.play.P00ServerKeepAlivePacket
 import lol.dap.asgard.network.packets.outgoing.play.P40DisconnectPacket
-import lol.dap.asgard.network.packets.serializers.BytePacketSerializer
+import lol.dap.asgard.network.packets.registry.serializers.BytePacketSerializer
 import lol.dap.asgard.network.types.extensions.readVarInt
 import lol.dap.asgard.network.types.extensions.toVarInt
 import lol.dap.asgard.network.types.extensions.writeVarInt

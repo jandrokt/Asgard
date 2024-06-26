@@ -1,4 +1,4 @@
-package lol.dap.asgard.network.packets.serializers
+package lol.dap.asgard.network.packets.registry.serializers
 
 import lol.dap.asgard.network.packets.OutgoingPacket
 import lol.dap.asgard.network.packets.annotations.SerialOrder

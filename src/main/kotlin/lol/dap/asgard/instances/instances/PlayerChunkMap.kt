@@ -1,69 +1,16 @@
 package lol.dap.asgard.instances.instances
 
 import lol.dap.asgard.entities.PlayerEntity
-import lol.dap.asgard.instances.chunk_providers.ChunkProvider
 import lol.dap.asgard.instances.data.Chunk
-import lol.dap.asgard.network.packets.outgoing.play.P26MapChunkBulkPacket
-import kotlin.collections.chunked
-import kotlin.collections.filter
-import kotlin.collections.flatMap
-import kotlin.collections.isNotEmpty
-import kotlin.collections.set
-import kotlin.collections.toList
-import kotlin.math.pow
-import kotlin.math.sqrt
 
-class PlayerChunkMap(
-    val chunkProvider: ChunkProvider,
-    val radius: Int
-) {
+interface PlayerChunkMap {
 
-    companion object {
+    fun addPlayer(player: PlayerEntity)
 
-        private const val CHUNKS_PER_PACKET = 4
+    fun removePlayer(player: PlayerEntity)
 
-    }
+    suspend fun updatePlayerChunks(player: PlayerEntity)
 
-    private val playerChunks: MutableMap<PlayerEntity, MutableSet<Chunk>> = mutableMapOf()
-
-    fun addPlayer(player: PlayerEntity) {
-        playerChunks[player] = mutableSetOf()
-    }
-
-    fun removePlayer(player: PlayerEntity) {
-        playerChunks.remove(player)
-    }
-
-    suspend fun updatePlayerChunks(player: PlayerEntity) {
-        val chunks = playerChunks[player] ?: return
-        chunks.clear()
-
-        val playerChunk = chunkProvider.getChunkAt(Chunk.Position.fromTridimensional(player.position)) ?: return
-        val chunkRadius = sqrt(radius.toDouble().pow(2) / 2).toInt()
-
-        for (dx in -chunkRadius..chunkRadius) {
-            for (dz in -chunkRadius..chunkRadius) {
-                val chunk =
-                    chunkProvider.getChunkAt(playerChunk.position.x + dx, playerChunk.position.z + dz) ?: continue
-                chunks.add(chunk)
-            }
-        }
-
-        val chunksToSend = playerChunks[player]!!
-            .filter { chunk ->
-                chunk.sections
-                    .flatMap { it.blocks.toList() }
-                    .isNotEmpty()
-            }
-            .chunked(CHUNKS_PER_PACKET)
-
-        for (chunkPair in chunksToSend) {
-            player.client?.writePacket(P26MapChunkBulkPacket(true, chunkPair))
-        }
-    }
-
-    fun getChunksForPlayer(player: PlayerEntity): Set<Chunk>? {
-        return playerChunks[player]
-    }
+    fun getActiveChunks(player: PlayerEntity): Set<Chunk>?
 
 }

@@ -6,18 +6,12 @@ data class Vec3D(
     val z: Double
 ) {
 
-    override fun equals(other: Any?): Boolean {
-        return when (other) {
-            is Vec3D -> x == other.x && y == other.y && z == other.z
-            else -> false
-        }
-    }
+    fun distanceTo(other: Vec3D): Double {
+        val dx = x - other.x
+        val dy = y - other.y
+        val dz = z - other.z
 
-    override fun hashCode(): Int {
-        var result = x.hashCode()
-        result = 31 * result + y.hashCode()
-        result = 31 * result + z.hashCode()
-        return result
+        return Math.sqrt(dx * dx + dy * dy + dz * dz)
     }
 
 }

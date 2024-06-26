@@ -17,5 +17,9 @@ class LivingEntity(
     override var maxHealth = 20.0
 
     override var velocity = Vec3D(0.0, 0.0, 0.0)
+    override var isOnGround = false
+
+    override var yaw = 0.0f
+    override var pitch = 0.0f
 
 }

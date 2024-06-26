@@ -1,4 +1,4 @@
-package lol.dap.asgard.network.packets.serializers
+package lol.dap.asgard.network.packets.registry.serializers
 
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.types.VarInt
@@ -50,6 +50,14 @@ object BytePacketDeserializer {
 
         typeDeserializers[UShort::class] = { buffer ->
             buffer.getShort().toUShort()
+        }
+
+        typeDeserializers[Float::class] = { buffer ->
+            buffer.getFloat()
+        }
+
+        typeDeserializers[Double::class] = { buffer ->
+            buffer.getDouble()
         }
 
         typeDeserializers[String::class] = { buffer ->
