@@ -184,17 +184,6 @@ class SlimeChunkProvider(
         return chunks
     }
 
-    fun Byte.reverseBits(): Byte {
-        var value = this.toInt()
-        var result = 0
-        for (i in 0 until 8) {
-            result = result shl 1
-            result = result or (value and 1)
-            value = value shr 1
-        }
-        return result.toByte()
-    }
-
     data class Properties(
         val version: Byte,
         val worldVersion: Byte,

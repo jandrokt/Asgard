@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.9.21"
+    kotlin("jvm") version "2.0.20"
 
     application
 }
@@ -7,7 +7,6 @@ plugins {
 group = "lol.dap.asgard"
 version = "1.0-SNAPSHOT"
 
-val koinVersion = "3.5.3"
 val ktorVersion = "2.3.7"
 
 application {
@@ -30,9 +29,9 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.10.1")
 
-    implementation("net.kyori:adventure-api:4.15.0")
-    implementation("net.kyori:adventure-text-serializer-gson:4.15.0")
-    implementation("net.kyori:adventure-text-minimessage:4.15.0")
+    implementation("net.kyori:adventure-api:4.17.0")
+    implementation("net.kyori:adventure-text-serializer-gson:4.17.0")
+    implementation("net.kyori:adventure-text-minimessage:4.17.0")
 
     implementation("com.github.luben:zstd-jni:1.5.6-3")
 }

@@ -26,6 +26,9 @@ class AsgardPacketRegistry : PacketRegistry {
         // Login
         registerPacketType(L00LoginStartPacket::class)
 
+        // Play
+        registerPacketType(P00ClientKeepAlivePacket::class)
+
         registerPacketType(P03PlayerPacket::class)
         registerPacketType(P04PlayerPositionPacket::class)
         registerPacketType(P05PlayerLookPacket::class)
@@ -34,9 +37,6 @@ class AsgardPacketRegistry : PacketRegistry {
         // Status
         registerPacketType(S00RequestPacket::class)
         registerPacketType(S01PingPacket::class)
-
-        // Play
-        registerPacketType(P00ClientKeepAlivePacket::class)
     }
 
     override fun <T : IncomingPacket> registerPacketType(packet: KClass<T>) {

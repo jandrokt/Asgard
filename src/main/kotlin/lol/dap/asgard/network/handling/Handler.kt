@@ -9,13 +9,13 @@ typealias PacketHandler = suspend (Client, IncomingPacket) -> Unit
 abstract class Handler {
 
     private val packetHandlers = mutableMapOf<PacketReference, PacketHandler>()
-
     private val conditionals = mutableMapOf<PacketReference, (Client) -> Boolean>()
 
-    private val rateLimits = mutableMapOf<PacketReference, Long>()
-    private var globalRateLimit: Long = Long.MAX_VALUE
-    private val lastPacketTimes = mutableMapOf<Client, MutableMap<PacketReference, Long>>()
+    private var globalRateLimit: Long? = null
     private val lastGlobalPacketTimes = mutableMapOf<Client, Long>()
+
+    private val rateLimits = mutableMapOf<PacketReference, Long?>()
+    private val lastPacketTimes = mutableMapOf<Client, MutableMap<PacketReference, Long>>()
 
     fun on(state: ClientState, id: Int, handler: PacketHandler) {
         packetHandlers[PacketReference(state, id)] = handler
@@ -24,22 +24,23 @@ abstract class Handler {
     suspend fun handle(client: Client, state: ClientState, packetId: Int, packet: IncomingPacket) {
         val packetReference = PacketReference(state, packetId)
 
+        val condition = conditionals[packetReference]
+        if (condition != null && !condition(client)) {
+            return
+        }
+
         val now = System.currentTimeMillis()
         val lastPacketTime = lastPacketTimes.getOrPut(client) { mutableMapOf() }.getOrDefault(packetReference, 0L)
         val lastGlobalPacketTime = lastGlobalPacketTimes.getOrDefault(client, 0L)
 
-        if (now - lastPacketTime < rateLimits.getOrDefault(packetReference, Long.MAX_VALUE) ||
-            now - lastGlobalPacketTime < globalRateLimit) {
+        val packetRateLimit = rateLimits[packetReference]
+        if ((packetRateLimit != null && now - lastPacketTime < packetRateLimit) ||
+            (globalRateLimit != null && now - lastGlobalPacketTime < globalRateLimit!!)) {
             return
         }
 
         lastPacketTimes[client]?.set(packetReference, now)
         lastGlobalPacketTimes[client] = now
-
-        val condition = conditionals[packetReference]
-        if (condition != null && !condition(client)) {
-            return
-        }
 
         val handlers = getHandlers(state, packetId)
 

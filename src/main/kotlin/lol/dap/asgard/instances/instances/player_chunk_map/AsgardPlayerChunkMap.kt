@@ -1,4 +1,4 @@
-package lol.dap.asgard.instances.instances
+package lol.dap.asgard.instances.instances.player_chunk_map
 
 import lol.dap.asgard.entities.PlayerEntity
 import lol.dap.asgard.instances.chunk_providers.ChunkProvider
@@ -8,6 +8,7 @@ import kotlin.collections.chunked
 import kotlin.collections.filter
 import kotlin.collections.flatMap
 import kotlin.collections.isNotEmpty
+import kotlin.collections.minus
 import kotlin.collections.set
 import kotlin.collections.toList
 import kotlin.math.pow
@@ -32,7 +33,7 @@ class AsgardPlayerChunkMap(
         playerChunks.remove(player)
     }
 
-    override suspend fun updatePlayerChunks(player: PlayerEntity) {
+    override fun updatePlayerChunks(player: PlayerEntity) {
         val currentChunks = playerChunks[player] ?: return
         val newChunks = mutableSetOf<Chunk>()
 
@@ -53,7 +54,9 @@ class AsgardPlayerChunkMap(
         currentChunks.clear()
         currentChunks.addAll(newChunks)
 
-        sendNewChunks(player, chunksToAdd)
+        player.instance.tickLoop.scheduleJob {
+            sendNewChunks(player, chunksToAdd)
+        }
     }
 
     private suspend fun sendNewChunks(player: PlayerEntity, chunksToAdd: Set<Chunk>) {

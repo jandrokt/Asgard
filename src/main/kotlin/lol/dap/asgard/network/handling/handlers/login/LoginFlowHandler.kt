@@ -22,11 +22,12 @@ class LoginFlowHandler : Handler() {
     private suspend fun loginStart(client: Client, packet: IncomingPacket) {
         if (packet !is L00LoginStartPacket) return
 
-        client.uuid = UUID.nameUUIDFromBytes("OfflinePlayer:${client.username}".toByteArray())
-        client.username = packet.username
         client.state = ClientState.PLAY
 
-        val loginEvent = PlayerLoginEvent(client, packet, client.uuid, client.username, null)
+        val username = packet.username
+        val uuid = UUID.nameUUIDFromBytes("OfflinePlayer:${username}".toByteArray())
+
+        val loginEvent = PlayerLoginEvent(client, packet, uuid, username, null)
         Asgard.eventDispatcher.dispatch(AsgardEvents.PLAYER_LOGIN, loginEvent)
 
         if (loginEvent.cancelled) {
@@ -37,6 +38,9 @@ class LoginFlowHandler : Handler() {
             }
             return
         }
+
+        client.username = loginEvent.username
+        client.uuid = loginEvent.uuid
 
         L02LoginSuccessPacket(
             uuid = loginEvent.uuid.toString(),

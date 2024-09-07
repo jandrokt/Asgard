@@ -25,7 +25,7 @@ inline fun readVarInt(readByte: () -> Byte): VarInt {
     var byte: Byte
 
     do {
-        if (offset == 35) error("VarInt too long")
+        if (offset == 35) throw IllegalArgumentException("VarInt is too big")
 
         byte = readByte()
         value = value or ((byte.toLong() and 0x7F) shl offset)

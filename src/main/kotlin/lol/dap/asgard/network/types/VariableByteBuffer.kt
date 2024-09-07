@@ -66,6 +66,18 @@ class VariableByteBuffer() : Collection<Byte> {
         }
     }
 
+    fun putULong(ulong: ULong) {
+        repeat(8) { shift ->
+            buffer.add((ulong shr (56 - 8 * shift)).toByte())
+        }
+    }
+
+    fun putULong(index: Int, ulong: ULong) {
+        repeat(8) { shift ->
+            buffer.add(index + shift, (ulong shr (56 - 8 * shift)).toByte())
+        }
+    }
+
     fun putInt(int: Int) {
         repeat(4) { shift ->
             buffer.add((int shr (24 - 8 * shift)).toByte())

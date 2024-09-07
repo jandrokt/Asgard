@@ -68,28 +68,34 @@ class AsgardClient(
         return packet
     }
 
-    override suspend fun writePacket(packet: ByteBuffer) {
+    override suspend fun writePacket(packet: ByteBuffer, flush: Boolean) {
         if (writeChannel.isClosedForWrite || socket.isClosed) return
 
-        // Write the VarInt size of the packet
-        writeChannel.writeVarInt(packet.remaining().toVarInt())
+        runBlocking {
+            // Write the VarInt size of the packet
+            writeChannel.writeVarInt(packet.remaining().toVarInt())
 
-        // Write the packet
-        writeChannel.writePacket {
-            writeFully(packet)
+            // Write the packet
+            writeChannel.writePacket {
+                writeFully(packet)
+            }
+
+            if (flush) {
+                writeChannel.flush()
+            }
         }
     }
 
-    override suspend fun <T : OutgoingPacket> writePacket(packet: T) {
+    override suspend fun <T : OutgoingPacket> writePacket(packet: T, flush: Boolean) {
         if (writeChannel.isClosedForWrite || socket.isClosed) return
 
         // Get the Packet ID from the annotation
         val packetId = (packet::class.annotations.first() as Packet).id
 
-        val serializedPacket = BytePacketSerializer.serialize(packet, packet::class)
+        val serializedPacket = BytePacketSerializer.serialize(packet)
         serializedPacket.putVarInt(0, packetId.toVarInt())
 
-        writePacket(serializedPacket.toByteBuffer())
+        writePacket(serializedPacket.toByteBuffer(), flush)
 
         logger.debug { "Sent a Packet ${packetId.toHexRepresentation()} to ${address.toRegularString()} ($state)" }
     }
@@ -100,6 +106,10 @@ class AsgardClient(
 
     override suspend fun disconnect(reason: String) {
         if (state == ClientState.DISCONNECTED) return
+
+        if (entity != null) {
+            entity!!.instance.removeEntity(entity!!)
+        }
 
         stopKeepAlive()
 

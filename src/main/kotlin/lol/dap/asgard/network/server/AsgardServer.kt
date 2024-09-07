@@ -3,12 +3,14 @@ package lol.dap.asgard.network.server
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import lol.dap.asgard.Asgard
-import lol.dap.asgard.extensions.async
 import lol.dap.asgard.extensions.toHexRepresentation
 import lol.dap.asgard.extensions.toRegularString
-import lol.dap.asgard.network.handling.HandlerManager
 import lol.dap.asgard.network.packets.IncomingPacket
 import lol.dap.asgard.network.types.extensions.getVarInt
 import java.nio.ByteBuffer
@@ -33,39 +35,46 @@ class AsgardServer(
 
         logger.info { "Asgard is listening on $host:$port" }
 
-        while (started) {
-            try {
-                val clientSocket = serverSocket.accept()
-                val client = AsgardClient(clientSocket)
+        runBlocking {
+            while (started) {
+                try {
+                    val clientSocket = serverSocket.accept()
 
-                logger.info { "Client connected from ${client.address.toRegularString()}" }
+                    launch(Dispatchers.IO) {
+                        val client = AsgardClient(clientSocket)
 
-                async {
-                    try {
-                        while (!clientSocket.isClosed) {
-                            try {
-                                val packet = client.readPacket()
-                                val (packetId, constructedPacket) = constructPacket(client, packet) ?: continue
+                        logger.info { "Client connected from ${client.address.toRegularString()}" }
 
-                                Asgard.handler.passToHandlers(client, packetId, constructedPacket)
-                            } catch (_: ClosedReceiveChannelException) {
-                                client.disconnect()
-                            } catch (e: Exception) {
-                                logger.error(e) { "An error occurred while reading a packet from ${client.address.toRegularString()}" }
+                        Asgard.clientRepository.addClient(client)
+
+                        try {
+                            while (!clientSocket.isClosed) {
+                                try {
+                                    val packet = client.readPacket()
+                                    val (packetId, constructedPacket) = constructPacket(client, packet) ?: continue
+
+                                    Asgard.handler.passToHandlers(client, packetId, constructedPacket)
+                                } catch (_: ClosedReceiveChannelException) {
+                                    client.disconnect()
+                                } catch (e: Exception) {
+                                    logger.error(e) { "An error occurred while reading a packet from ${client.address.toRegularString()}" }
+                                }
                             }
-                        }
-                    } catch (_: ClosedReceiveChannelException) {
-                        // Most likely a client disconnect
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    } finally {
-                        client.disconnect()
+                        } catch (_: ClosedReceiveChannelException) {
+                            // Most likely a client disconnect
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        } finally {
+                            Asgard.clientRepository.removeClient(client)
 
-                        logger.info { "Client disconnected from ${client.address.toRegularString()}" }
+                            client.disconnect()
+
+                            logger.info { "Client disconnected from ${client.address.toRegularString()}" }
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }

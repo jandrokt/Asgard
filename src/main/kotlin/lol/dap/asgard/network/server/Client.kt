@@ -21,9 +21,9 @@ interface Client {
 
     suspend fun readPacket(): ByteBuffer
 
-    suspend fun writePacket(packet: ByteBuffer)
+    suspend fun writePacket(packet: ByteBuffer, flush: Boolean = false)
 
-    suspend fun <T : OutgoingPacket> writePacket(packet: T)
+    suspend fun <T : OutgoingPacket> writePacket(packet: T, flush: Boolean = false)
 
     suspend fun disconnect(reason: String = "")
 

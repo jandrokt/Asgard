@@ -8,12 +8,18 @@ import lol.dap.asgard.entities.PlayerEntity
 import lol.dap.asgard.event_dispatching.AsgardEvents
 import lol.dap.asgard.event_dispatching.events.play.PlayerEntityCreationEvent
 import lol.dap.asgard.instances.chunk_providers.ChunkProvider
+import lol.dap.asgard.instances.instances.player_chunk_map.AsgardPlayerChunkMap
+import lol.dap.asgard.instances.instances.player_map.AsgardPlayerMap
 import lol.dap.asgard.network.packets.outgoing.play.P01JoinGamePacket
 import lol.dap.asgard.network.packets.outgoing.play.P05SpawnPositionPacket
 import lol.dap.asgard.network.packets.outgoing.play.P08PlayerPositionAndLookPacket
+import lol.dap.asgard.network.packets.outgoing.play.entities.P1CEntityMetadataPacket
 import lol.dap.asgard.network.server.Client
 import lol.dap.asgard.utilities.Vec3D
+import lol.dap.asgard.utilities.tick_loop.TickLoop
 import kotlin.collections.find
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.toUByte
 
 class AsgardInstance(
@@ -22,14 +28,18 @@ class AsgardInstance(
 
     override val spawnPosition: Vec3D,
     override val chunkProvider: ChunkProvider,
-    val viewDistance: Int,
+    val renderDistance: Int,
+    val entityViewDistance: Int,
 
     override val entities: MutableList<Entity>
 ) : Instance {
 
-    override val chunkMap = AsgardPlayerChunkMap(chunkProvider, viewDistance)
+    override val playerChunkMap = AsgardPlayerChunkMap(chunkProvider, renderDistance)
+    override val playerMap = AsgardPlayerMap(entityViewDistance)
 
     var entityCount = 0
+
+    override val tickLoop = TickLoop("Instance $name", 20)
 
     override fun spawnEntity(entityType: EntityType): Entity {
         val entity = LivingEntity(entityCount++, entityType, "Entity $entityCount", this, spawnPosition)
@@ -47,7 +57,7 @@ class AsgardInstance(
         entities.remove(entity)
     }
 
-    override suspend fun addClient(client: Client): Entity {
+    override fun addClient(client: Client): Entity {
         val entity = PlayerEntity(
             client = client,
             id = entityCount++,
@@ -62,24 +72,29 @@ class AsgardInstance(
         entities.add(event.entity)
         client.entity = event.entity
 
-        chunkMap.addPlayer(event.entity)
-
-        client.writePacket(
+        tickLoop.scheduleJob {
             P01JoinGamePacket(
                 entity.id,
-                1.toUByte(),
+                entity.gameMode.id.toUByte(),
                 0.toByte(),
                 0.toUByte(),
                 100.toUByte(),
                 "default",
                 false
-            )
-        )
+            ).send(client)
 
-        chunkMap.updatePlayerChunks(event.entity)
+            P05SpawnPositionPacket(spawnPosition).send(client)
+            P08PlayerPositionAndLookPacket(spawnPosition, 0.0f, 0.0f).send(client)
 
-        client.writePacket(P05SpawnPositionPacket(spawnPosition))
-        client.writePacket(P08PlayerPositionAndLookPacket(spawnPosition, 0.0f, 0.0f))
+            playerChunkMap.addPlayer(event.entity)
+            playerChunkMap.updatePlayerChunks(event.entity)
+
+            tickLoop.scheduleJob(1.seconds) {
+                playerMap.addPlayer(entity)
+                playerMap.showToPlayers(entity)
+            }
+            //playerMap.syncTeleportPlayer(entity)
+        }
 
         return entity
     }
@@ -88,11 +103,32 @@ class AsgardInstance(
         val entity = entities.find { it is PlayerEntity && it.client == client } ?: return
 
         if (entity is PlayerEntity) {
-            chunkMap.removePlayer(entity)
+            playerChunkMap.removePlayer(entity)
+            tickLoop.scheduleJob {
+                playerMap.removePlayer(entity)
+                playerMap.permanentlyHideFromPlayers(entity)
+            }
+
             client.entity = null
         }
 
         entities.remove(entity)
+    }
+
+    override fun updateEntityMetadata(entity: Entity) {
+        val closePlayers = entities
+            .filter { it is PlayerEntity }
+            .map { it as PlayerEntity }
+            .filter { it.position.distanceTo(entity.position) <= entityViewDistance }
+            .filter { it != entity }
+        val packet = P1CEntityMetadataPacket(entity)
+        entity.metadata.clearChangedMetadata()
+
+        tickLoop.scheduleJob {
+            for (player in closePlayers) {
+                packet.send(player.client)
+            }
+        }
     }
 
 }
